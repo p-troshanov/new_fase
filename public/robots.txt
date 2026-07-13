@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /account
+Disallow: /admin
+Disallow: /auth
+Disallow: /payment-success
+Disallow: /payment-cancel
+Disallow: /api/
+
+Sitemap: https://new-face-course.lovable.app/sitemap.xml
