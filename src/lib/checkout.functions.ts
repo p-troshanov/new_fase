@@ -35,18 +35,9 @@ export type CreateOrderInput = z.infer<typeof createOrderSchema>;
 export const createOrder = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => createOrderSchema.parse(input))
   .handler(async ({ data }) => {
-    const url = process.env.SUPABASE_URL;
-    const key = process.env.SUPABASE_PUBLISHABLE_KEY;
-    if (!url || !key) {
-      throw new Error("Supabase env not configured");
-    }
-    const supabase = createClient<Database>(url, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
-      auth: {
-        storage: undefined,
-        persistSession: false,
-        autoRefreshToken: false,
-      },
-    });
+    const { supabaseAdmin: supabase } = await import(
+      "@/integrations/supabase/client.server"
+    );
 
     // Resolve items and compute total (server-side is source of truth for pricing)
     const items = data.items.map(({ product, quantity }) => {

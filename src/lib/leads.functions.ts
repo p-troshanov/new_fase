@@ -43,11 +43,10 @@ export const submitLead = createServerFn({ method: "POST" })
       return { ok: true as const };
     }
 
-    const supabase = createClient<Database>(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
+    const { supabaseAdmin: supabase } = await import(
+      "@/integrations/supabase/client.server"
     );
+	
 
     // Basic rate limit: max 3 leads per email in 60s
     const since = new Date(Date.now() - 60_000).toISOString();
