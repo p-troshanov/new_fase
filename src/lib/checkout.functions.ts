@@ -28,17 +28,21 @@ export const createOrder = createServerFn({ method: "POST" })
     const firstItem = data.items[0];
     const productDef = PRODUCTS[firstItem.product];
 
-    // Отправляем как заявку в Jetplan
-    void sendWebhook({
+    // Упаковываем данные корзины под схему Jetplan
+    const webhookData = {
       name: data.name ?? data.email.split("@")[0],
       email: data.email,
-      phone: data.phone ?? null,
-      source: data.source ?? "checkout_test",
-      interest: firstItem.product,
-      amount_rub: productDef.price,
-    }).catch((e) => console.error("[checkout.webhook]", e));
+      phone: data.phone ?? "",
+      telegram: "", // В форме оплаты нет тг
+      source_url: "https://new-face-course.lovable.app/checkout",
+      form_id: data.source ?? "checkout_form",
+      other_info: `Попытка оплаты товара: ${firstItem.product}\nСумма: ${productDef.price} руб.`
+    };
 
-    // Возвращаем фейковый заказ, чтобы интерфейс пошел дальше
+    // Отправляем как заявку в Jetplan
+    void sendWebhook(webhookData).catch((e) => console.error("[checkout.webhook]", e));
+
+    // Возвращаем фейковый заказ, чтобы интерфейс перешел на страницу Спасибо
     return {
       invoiceId: invoice_id,
       amountKopecks: toKopecks(productDef.price),
@@ -55,11 +59,11 @@ export const createOrder = createServerFn({ method: "POST" })
     };
   });
 
-async function sendWebhook(data: Record<string, any>) {
+async function sendWebhook(payload: Record<string, any>) {
   const webhookUrl = "https://app.jetplan.site/api/webhooks/projects/28540c6c-72f0-4cd9-9b82-cf6fa46d40da/contacts";
   await fetch(webhookUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
   }).catch(() => {});
 }

@@ -32,18 +32,28 @@ export const submitLead = createServerFn({ method: "POST" })
   .inputValidator((input) => leadSchema.parse(input))
   .handler(async ({ data }) => {
     // Защита от ботов
-    if (data.website && data.website.trim().length > 0) return { ok: true as const };
-    if (data.startedAt && Date.now() - data.startedAt < 1200) return { ok: true as const };
+    if (data.website && data.website.trim().length > 0) return { ok: true as const, id: null };
+    if (data.startedAt && Date.now() - data.startedAt < 1200) return { ok: true as const, id: null };
 
-    // Отправляем только в Jetplan
-    void sendWebhook(data).catch((e) => console.error("[leads.webhook]", e));
+    // Упаковываем данные строго под схему Jetplan
+    const webhookData = {
+      name: data.name,
+      email: data.email,
+      phone: data.phone ?? "",
+      telegram: data.telegram ?? "",
+      source_url: "https://new-face-course.lovable.app", // Ссылка на ваш сайт
+      form_id: data.source ?? "lead_magnet", // Передаем источник в поле form_id
+      other_info: `Интерес: ${data.interest ?? 'Не указан'}\nОтветы квиза: ${data.answers ? JSON.stringify(data.answers) : 'Нет'}`
+    };
+
+    // Отправляем в Jetplan
+    void sendWebhook(webhookData).catch((e) => console.error("[leads.webhook]", e));
     void notifyAdminNewLead(data).catch((e) => console.error("[leads.notify]", e));
 
     return { ok: true as const, id: "dummy-lead-id" };
   });
 
 async function notifyAdminNewLead(data: any) {
-  // Логика отправки на почту (оставляем как было, если ключи настроены)
   const lovableKey = process.env.LOVABLE_API_KEY;
   const resendKey = process.env.RESEND_API_KEY;
   const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL;
@@ -66,12 +76,12 @@ async function notifyAdminNewLead(data: any) {
   }).catch(() => {});
 }
 
-async function sendWebhook(data: Record<string, any>) {
+async function sendWebhook(payload: Record<string, any>) {
   const webhookUrl = "https://app.jetplan.site/api/webhooks/projects/28540c6c-72f0-4cd9-9b82-cf6fa46d40da/contacts";
   const res = await fetch(webhookUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) console.error("[leads.webhook] error", res.status);
 }
