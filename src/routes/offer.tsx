@@ -1,3 +1,4 @@
+// src/routes/offer.tsx
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/offer")({
@@ -15,13 +16,12 @@ export const Route = createFileRoute("/offer")({
   component: OfferPage,
 });
 
-// TODO: реквизиты ИП — заменить перед публикацией
 const SELLER = {
-  fullName: "[ФИО ИП]",
-  short: "[ИП Фамилия И.О.]",
-  inn: "[ИНН]",
-  ogrnip: "[ОГРНИП]",
-  address: "[Адрес регистрации]",
+  fullName: "Индивидуальный предприниматель Исмагилов Евгений Рамильевич",
+  short: "ИП Исмагилов Е. Р.",
+  inn: "631814767557",
+  ogrnip: "[Укажите ОГРНИП]",
+  address: "[Укажите адрес регистрации]",
   email: "hello@newface.example",
   brand: "NEW FACE",
 };

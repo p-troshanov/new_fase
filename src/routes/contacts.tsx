@@ -1,3 +1,4 @@
+// src/routes/contacts.tsx
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/contacts")({
@@ -14,10 +15,10 @@ export const Route = createFileRoute("/contacts")({
 });
 
 const SELLER = {
-  short: "[ИП Фамилия И.О.]",
-  inn: "[ИНН]",
-  ogrnip: "[ОГРНИП]",
-  address: "[Адрес регистрации]",
+  short: "ИП Исмагилов Е. Р.",
+  inn: "631814767557",
+  ogrnip: "[Укажите ОГРНИП]",
+  address: "[Укажите адрес регистрации]",
   email: "hello@newface.example",
 };
 

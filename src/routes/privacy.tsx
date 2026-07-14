@@ -1,3 +1,4 @@
+// src/routes/privacy.tsx
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/privacy")({
@@ -16,8 +17,8 @@ export const Route = createFileRoute("/privacy")({
 });
 
 const SELLER = {
-  short: "[ИП Фамилия И.О.]",
-  inn: "[ИНН]",
+  short: "ИП Исмагилов Евгений Рамильевич",
+  inn: "631814767557",
   email: "hello@newface.example",
 };
 

@@ -1,3 +1,4 @@
+// src/routes/intensive.tsx
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { CheckoutModal } from "@/components/checkout/CheckoutModal";
@@ -294,8 +295,9 @@ function IntensivePage() {
           </div>
         </section>
 
-        <footer className="mt-16 text-center text-xs text-muted-foreground">
-          © NEW FACE · Natural Face Method
+        <footer className="mt-16 pb-8 text-center text-xs text-muted-foreground space-y-1">
+          <div>© NEW FACE · Natural Face Method</div>
+          <div>ИП Исмагилов Евгений Рамильевич · ИНН 631814767557</div>
         </footer>
       </div>
     </main>

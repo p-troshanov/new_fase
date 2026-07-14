@@ -1,3 +1,4 @@
+// src/routes/index.tsx
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Check,
@@ -664,6 +665,10 @@ function LandingPage() {
             </div>
             <div className="mt-1 text-[10px] tracking-[0.32em] uppercase text-muted-foreground">
               Natural Face Method
+            </div>
+            <div className="mt-3 text-xs text-muted-foreground">
+              ИП Исмагилов Евгений Рамильевич<br />
+              ИНН 631814767557
             </div>
           </div>
           <div className="flex items-center gap-6 text-xs text-muted-foreground">

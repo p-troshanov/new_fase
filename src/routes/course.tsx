@@ -1,3 +1,4 @@
+// src/routes/course.tsx
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
@@ -406,7 +407,10 @@ function CoursePage() {
         </section>
 
         <footer className="mt-16 flex flex-col items-center gap-2 text-xs text-muted-foreground">
-          <div>© NEW FACE · Natural Face Method</div>
+          <div className="text-center space-y-1">
+            <div>© NEW FACE · Natural Face Method</div>
+            <div>ИП Исмагилов Евгений Рамильевич · ИНН 631814767557</div>
+          </div>
           <div className="flex gap-4">
             <Link to="/offer" className="hover:text-foreground">Оферта</Link>
             <Link to="/privacy" className="hover:text-foreground">Конфиденциальность</Link>

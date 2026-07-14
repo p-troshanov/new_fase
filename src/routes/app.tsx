@@ -1,3 +1,4 @@
+// src/routes/app.tsx
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
 import {
@@ -339,8 +340,9 @@ function AppPage() {
           устройстве.
         </p>
 
-        <footer className="mt-16 pb-16 text-center text-xs text-muted-foreground">
-          © NEW FACE · Natural Face Method
+        <footer className="mt-16 pb-16 text-center text-xs text-muted-foreground space-y-1">
+          <div>© NEW FACE · Natural Face Method</div>
+          <div>ИП Исмагилов Евгений Рамильевич · ИНН 631814767557</div>
         </footer>
       </div>
     </main>
