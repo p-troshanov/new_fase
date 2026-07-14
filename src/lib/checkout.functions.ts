@@ -1,14 +1,7 @@
-// Массаж/src/lib/checkout.functions.ts
+// src/lib/checkout.functions.ts
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
-import {
-  PRODUCTS,
-  type ProductKey,
-  toKopecks,
-  generateInvoiceId,
-} from "./products";
+import { PRODUCTS, type ProductKey, toKopecks, generateInvoiceId } from "./products";
 import { PAYMENT_METHOD_KEYS } from "./payment-methods";
 
 const orderItemSchema = z.object({
@@ -24,138 +17,49 @@ const createOrderSchema = z.object({
   promoCode: z.string().max(80).optional(),
   source: z.string().max(80).optional(),
   sessionId: z.string().max(80).optional(),
-  paymentMethod: z
-    .enum(PAYMENT_METHOD_KEYS as [string, ...string[]])
-    .optional(),
+  paymentMethod: z.enum(PAYMENT_METHOD_KEYS as [string, ...string[]]).optional(),
   items: z.array(orderItemSchema).min(1).max(10),
 });
-
-export type CreateOrderInput = z.infer<typeof createOrderSchema>;
 
 export const createOrder = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => createOrderSchema.parse(input))
   .handler(async ({ data }) => {
-    const { supabaseAdmin: supabase } = await import(
-      "@/integrations/supabase/client.server"
-    );
-
-    // Resolve items and compute total (server-side is source of truth for pricing)
-    const items = data.items.map(({ product, quantity }) => {
-      const p = PRODUCTS[product];
-      return {
-        sku: p.sku,
-        title: p.title,
-        kind: p.kind,
-        quantity,
-        unit_price_kopecks: toKopecks(p.price),
-        vat: p.vat,
-      };
-    });
-
-    const amount_kopecks = items.reduce(
-      (sum, it) => sum + it.unit_price_kopecks * it.quantity,
-      0,
-    );
-
     const invoice_id = generateInvoiceId();
+    const firstItem = data.items[0];
+    const productDef = PRODUCTS[firstItem.product];
 
-    const { data: order, error: orderError } = await supabase
-      .from("orders")
-      .insert({
-        invoice_id,
-        email: data.email,
-        name: data.name ?? null,
-        phone: data.phone ?? null,
-        amount_kopecks,
-        currency: "RUB",
-        offer_key: data.offerKey ?? null,
-        promo_code: data.promoCode ?? null,
-        source: data.source ?? null,
-        session_id: data.sessionId ?? null,
-        status: "pending",
-        provider: "cloudpayments",
-        payment_method: data.paymentMethod ?? null,
-      })
-      .select("id, invoice_id, amount_kopecks")
-      .single();
-
-    if (orderError || !order) {
-      throw new Error(orderError?.message ?? "Failed to create order");
-    }
-
-    const { error: itemsError } = await supabase.from("order_items").insert(
-      items.map((it) => ({
-        order_id: order.id,
-        sku: it.sku,
-        title: it.title,
-        kind: it.kind,
-        quantity: it.quantity,
-        unit_price_kopecks: it.unit_price_kopecks,
-        vat: it.vat,
-      })),
-    );
-
-    if (itemsError) {
-      throw new Error(itemsError.message);
-    }
-
-    // Also create a linked lead so admin sees a single "заявки" surface,
-    // and the sales team can send a manual payment link by email.
-    const firstItem = items[0];
-    const interest = firstItem?.kind ?? null;
-    const { data: lead } = await supabase
-      .from("leads")
-      .insert({
-        name: data.name ?? data.email.split("@")[0],
-        email: data.email,
-        phone: data.phone ?? null,
-        source: data.source ?? "checkout",
-        interest,
-        product_id: firstItem?.sku ?? null,
-        amount_kopecks,
-      })
-      .select("id")
-      .single();
-
-    if (lead?.id) {
-      await supabase.from("orders").update({ lead_id: lead.id }).eq("id", order.id);
-    }
-
+    // Отправляем как заявку в Jetplan
     void sendWebhook({
       name: data.name ?? data.email.split("@")[0],
       email: data.email,
       phone: data.phone ?? null,
-      source: data.source ?? "checkout",
-      interest,
-      amount_rub: order.amount_kopecks / 100,
+      source: data.source ?? "checkout_test",
+      interest: firstItem.product,
+      amount_rub: productDef.price,
     }).catch((e) => console.error("[checkout.webhook]", e));
 
+    // Возвращаем фейковый заказ, чтобы интерфейс пошел дальше
     return {
-      invoiceId: order.invoice_id,
-      amountKopecks: order.amount_kopecks,
-      amountRub: order.amount_kopecks / 100,
+      invoiceId: invoice_id,
+      amountKopecks: toKopecks(productDef.price),
+      amountRub: productDef.price,
       currency: "RUB" as const,
       paymentMethod: data.paymentMethod ?? null,
-      items: items.map((it) => ({
-        sku: it.sku,
-        title: it.title,
+      items: data.items.map((it) => ({
+        sku: PRODUCTS[it.product].sku,
+        title: PRODUCTS[it.product].title,
         quantity: it.quantity,
-        priceRub: it.unit_price_kopecks / 100,
-        vat: it.vat,
+        priceRub: PRODUCTS[it.product].price,
+        vat: PRODUCTS[it.product].vat,
       })),
     };
   });
 
 async function sendWebhook(data: Record<string, any>) {
   const webhookUrl = "https://app.jetplan.site/api/webhooks/projects/28540c6c-72f0-4cd9-9b82-cf6fa46d40da/contacts";
-  const res = await fetch(webhookUrl, {
+  await fetch(webhookUrl, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
-  });
-  if (!res.ok) {
-    console.error("[checkout.webhook] error", res.status, await res.text());
-  }
+  }).catch(() => {});
 }
