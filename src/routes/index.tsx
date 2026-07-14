@@ -558,7 +558,7 @@ function LandingPage() {
               </h2>
               <p className="mt-5 max-w-md text-[15px] leading-relaxed text-muted-foreground md:text-base">
                 Стартовый набор — это первое утро. Полный курс NEW FACE — это 12
-                уроков по всем зонам лица, шеи и осанки. По 7 минут в день —
+                уроков по всем zones лица, шеи и осанки. По 7 минут в день —
                 и через 21 день лицо выглядит отдохнувшим само по себе.
               </p>
 
@@ -672,8 +672,9 @@ function LandingPage() {
             </div>
           </div>
           <div className="flex items-center gap-6 text-xs text-muted-foreground">
-            <a href="#" className="hover:text-foreground">Политика</a>
-            <a href="#" className="hover:text-foreground">Контакты</a>
+            <Link to="/offer" className="hover:text-foreground">Оферта</Link>
+            <Link to="/privacy" className="hover:text-foreground">Политика</Link>
+            <Link to="/contacts" className="hover:text-foreground">Контакты</Link>
           </div>
         </div>
       </footer>
