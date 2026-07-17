@@ -114,7 +114,7 @@ async function reverseDns(ip: string): Promise<string | null> {
       return null;
     }
 
-    const url = `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(ptrName)}&type=PTR`;
+    const url = `[https://cloudflare-dns.com/dns-query?name=$](https://cloudflare-dns.com/dns-query?name=$){encodeURIComponent(ptrName)}&type=PTR`;
     const res = await fetch(url, {
       headers: { accept: "application/dns-json" },
       signal: AbortSignal.timeout(2500),
