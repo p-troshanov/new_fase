@@ -71,7 +71,7 @@ app.post('/api/submit-lead', async (req, res) => {
         }
 
         // 6) Geo cache
-        let geo = { ...headerGeo, isp: undefined as string | undefined };
+        let geo: { country?: string; region?: string; city?: string; isp?: string } = { ...headerGeo };
         if (!isSpam && !geo.country) {
             const cached = db.prepare("SELECT country, region, city, isp FROM geo_cache WHERE ip_hash = ?").get(ipH) as any;
             if (cached?.country) {
@@ -128,7 +128,7 @@ app.post('/api/track-pageview', async (req, res) => {
             return res.json({ ok: false });
         }
 
-        let geo = { ...headerGeo, isp: undefined as string | undefined };
+        let geo: { country?: string; region?: string; city?: string; isp?: string } = { ...headerGeo };
         if (!geo.country) {
             const cached = db.prepare("SELECT country, region, city, isp FROM geo_cache WHERE ip_hash = ?").get(ipH) as any;
             if (cached?.country) {
