@@ -165,7 +165,7 @@ app.post('/api/cron/sync-ips', async (req, res) => {
     return res.status(result.ok ? 200 : 500).json(result);
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
     console.log(`Antifraud standalone service running on port ${PORT}`);
 });
