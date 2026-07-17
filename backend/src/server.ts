@@ -114,18 +114,43 @@ app.post('/api/submit-lead', async (req, res) => {
     }
 });
 
-// POST /api/track-pageview
+// POST /api/track-pageview (ОБНОВЛЕННЫЙ РОУТ)
 app.post('/api/track-pageview', async (req, res) => {
     const data = req.body;
     const ip = extractIp(req);
     const ipH = hashIp(ip);
+    const ipP = ipPrefix(ip);
     const ua = req.headers["user-agent"] || "";
     const headerGeo = extractGeoFromHeaders(req);
+    
+    // Новые поля от фронтенд-детектора ботов
+    const botScore = data.bot_score ?? 0;
+    const botLevel = data.bot_level ?? null;
+    const signals = data.signals ? JSON.stringify(data.signals) : null;
 
     try {
+        // Проверяем, не в белом ли списке этот IP
+        const wl = db.prepare("SELECT id FROM ip_whitelist WHERE ip_hash = ?").get(ipH);
+        const isWhitelisted = !!wl;
+
         const ban = db.prepare("SELECT id, expires_at FROM ip_bans WHERE ip_hash = ?").get(ipH) as any;
         if (ban && (!ban.expires_at || new Date(ban.expires_at) > new Date())) {
             return res.json({ ok: false });
+        }
+
+        // АВТОМАТИЧЕСКИЙ БАН, если клиентский детектор на 100% уверен, что это бот
+        if (!isWhitelisted && botScore >= 80) {
+            const now = Date.now();
+            db.prepare(`
+                INSERT INTO ip_bans (id, ip_hash, ip_prefix, reason, banned_by, expires_at, note)
+                VALUES (?, ?, ?, ?, 'system_client_bot', ?, ?)
+                ON CONFLICT(ip_hash) DO UPDATE SET expires_at=excluded.expires_at
+            `).run(
+                crypto.randomUUID(), ipH, ipP,
+                `auto: client_bot_score_${botScore}`,
+                new Date(now + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                ip
+            );
         }
 
         let geo: { country?: string; region?: string; city?: string; isp?: string } = { ...headerGeo };
@@ -145,7 +170,10 @@ app.post('/api/track-pageview', async (req, res) => {
 
         await checkAccess(ip, geo.country ?? null, ua);
 
-        db.prepare("INSERT INTO page_views (ip_hash) VALUES (?)").run(ipH);
+        // Записываем новые поля в page_views
+        db.prepare("INSERT INTO page_views (ip_hash, bot_score, bot_level, signals) VALUES (?, ?, ?, ?)").run(
+            ipH, botScore, botLevel, signals
+        );
 
         return res.json({ ok: true });
     } catch (err) {

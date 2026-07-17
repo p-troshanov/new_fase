@@ -1,3 +1,4 @@
+// src/routes/__root.tsx
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -14,6 +15,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { OfferBar } from "../components/sales/OfferBar";
 import { FortuneWheel } from "../components/sales/FortuneWheel";
+import { ConsentBanner } from "../components/ConsentBanner"; // <-- ДОБАВЛЕН ИМПОРТ
 
 function NotFoundComponent() {
   return (
@@ -171,10 +173,13 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       {!hideOfferBar && <OfferBar />}
       {showWheel && <FortuneWheel triggerDelayMs={15000} />}
+      
+      {/* ДОБАВЛЕН КОМПОНЕНТ АНТИФРОДА */}
+      <ConsentBanner />
+      
     </QueryClientProvider>
   );
 }

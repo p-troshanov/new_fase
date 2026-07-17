@@ -12,7 +12,6 @@ const dbPath = path.join(dataDir, 'antifraud.db');
 const db = new Database(dbPath, { verbose: console.log });
 db.pragma('journal_mode = WAL');
 
-// Инициализация схемы БД (замена таблицам Supabase)
 db.exec(`
   CREATE TABLE IF NOT EXISTS access_rules (
     id INTEGER PRIMARY KEY,
@@ -104,9 +103,13 @@ db.exec(`
     spam_reason TEXT
   );
 
+  -- ОБНОВЛЕННАЯ ТАБЛИЦА: Добавлены bot_score, bot_level, signals
   CREATE TABLE IF NOT EXISTS page_views (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ip_hash TEXT,
+    bot_score INTEGER DEFAULT 0,
+    bot_level TEXT,
+    signals TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
   );
 `);
