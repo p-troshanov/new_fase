@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "@tanstack/react-router";
 import { detectBot } from "@/client-bot-detector";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ShieldCheck } from "lucide-react";
 
 declare global {
   interface Window {
@@ -20,10 +20,17 @@ export function ConsentBanner() {
     
     if (!hasConsent) {
       setShow(true);
+      // Блокируем прокрутку страницы, пока не принято соглашение
+      document.body.style.overflow = "hidden";
     } else {
       // Если согласие уже есть, тихо запускаем антифрод и затем метрику
-      runAntiFraudAndMetrika();
+      runAntiFraudAndMetrika(false);
     }
+
+    // Очистка при размонтировании
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, []);
 
   const injectYandexMetrika = () => {
@@ -39,8 +46,6 @@ export function ConsentBanner() {
     script.id = "yandex-metrika";
     script.type = "text/javascript";
     script.async = true;
-    
-    // Используем .text вместо .innerHTML для 100% гарантии выполнения
     script.text = `
       (function(m,e,t,r,i,k,a){
           m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
@@ -60,12 +65,14 @@ export function ConsentBanner() {
     document.body.appendChild(noscriptDiv);
   };
 
-  const runAntiFraudAndMetrika = async () => {
+  const runAntiFraudAndMetrika = async (interactive = true) => {
     try {
-      // 1. Проверяем пользователя антифродом
-      const botResult = await detectBot();
+      // Если пользователь только что протянул ползунок (interactive = true),
+      // ждать 2.5 секунды не нужно, так как активность уже подтверждена ползунком.
+      // Ставим таймут 500мс вместо дефолтных 2500мс для мобильных устройств.
+      const botResult = await detectBot(interactive ? 500 : 2500);
 
-      // 2. Отправляем результат на бэкенд
+      // Отправляем результат на бэкенд
       await fetch("/api/track-pageview", {
         method: "POST",
         headers: {
@@ -78,7 +85,7 @@ export function ConsentBanner() {
         }),
       });
 
-      // 3. Запускаем Метрику
+      // Запускаем Метрику
       injectYandexMetrika();
     } catch (err) {
       console.error("Antifraud script failed:", err);
@@ -98,9 +105,10 @@ export function ConsentBanner() {
       setIsVerifying(true);
       localStorage.setItem("privacy_consent", "true");
       
-      await runAntiFraudAndMetrika();
+      await runAntiFraudAndMetrika(true);
       
-      // Скрываем баннер после успешной проверки
+      // Возвращаем скролл и скрываем окно
+      document.body.style.overflow = "";
       setShow(false);
     } else {
       // Если отпустили раньше времени - пружиним обратно
@@ -114,18 +122,30 @@ export function ConsentBanner() {
   const thumbOffset = (sliderValue / 100) * 192;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card p-4 shadow-2xl md:p-6 animate-in slide-in-from-bottom-full">
-      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 md:flex-row">
-        <p className="text-sm text-muted-foreground leading-relaxed md:max-w-2xl">
-          Мы используем файлы cookie и собираем технические данные для защиты от фрода. 
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background/80 p-4 backdrop-blur-md">
+      <div className="w-full max-w-md rounded-3xl border border-border bg-card p-8 text-center shadow-2xl animate-in zoom-in-95 duration-200">
+        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <ShieldCheck className="h-8 w-8" strokeWidth={1.5} />
+        </div>
+
+        <h2 className="mb-3 font-serif text-2xl text-foreground">
+          Защита от спама
+        </h2>
+        
+        <p className="mb-8 text-sm leading-relaxed text-muted-foreground">
+          Мы используем файлы cookie и анализируем технические данные устройства для защиты сайта. 
           Продолжая, вы соглашаетесь с{" "}
-          <Link className="text-primary underline hover:text-foreground transition-colors" to="/privacy">
+          <Link 
+            className="text-primary underline hover:text-foreground transition-colors" 
+            to="/privacy"
+            onClick={() => { document.body.style.overflow = ""; setShow(false); }}
+          >
             Политикой конфиденциальности
           </Link>.
         </p>
         
         {/* Компонент Слайдера */}
-        <div className="relative h-14 w-[240px] flex-shrink-0 overflow-hidden rounded-full bg-secondary/70">
+        <div className="relative mx-auto h-14 w-[240px] flex-shrink-0 overflow-hidden rounded-full bg-secondary/70">
           {/* Заливка фона при протягивании */}
           <div 
             className="absolute left-0 top-0 h-full bg-primary/20 transition-all duration-75" 
@@ -158,7 +178,6 @@ export function ConsentBanner() {
             <ArrowRight className="h-5 w-5" />
           </div>
         </div>
-
       </div>
     </div>
   );
