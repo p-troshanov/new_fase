@@ -27,14 +27,21 @@ export function ConsentBanner() {
   }, []);
 
   const injectYandexMetrika = () => {
-    if (document.getElementById("yandex-metrika")) return;
+    if (document.getElementById("yandex-metrika")) {
+      console.log("[Metrika] Скрипт уже был инициализирован ранее.");
+      return;
+    }
+
+    console.log("[Antifraud] Проверка пройдена. Внедряем Яндекс.Метрику в <head>...");
 
     // Внедряем основной скрипт
     const script = document.createElement("script");
     script.id = "yandex-metrika";
     script.type = "text/javascript";
     script.async = true;
-    script.innerHTML = `
+    
+    // Используем .text вместо .innerHTML для 100% гарантии выполнения
+    script.text = `
       (function(m,e,t,r,i,k,a){
           m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
           m[i].l=1*new Date();
@@ -58,7 +65,7 @@ export function ConsentBanner() {
       // 1. Проверяем пользователя антифродом
       const botResult = await detectBot();
 
-      // 2. Отправляем результат
+      // 2. Отправляем результат на бэкенд
       await fetch("/api/track-pageview", {
         method: "POST",
         headers: {
