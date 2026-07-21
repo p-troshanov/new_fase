@@ -26,7 +26,10 @@ function NotFoundComponent() {
           The page you're looking for doesn't exist or has been moved.
         </p>
         <div className="mt-6">
-          <Link className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90" to="/">
+          <Link
+            to="/"
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
             Go home
           </Link>
         </div>
@@ -89,11 +92,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "preconnect", href: "[https://fonts.googleapis.com](https://fonts.googleapis.com)" },
-      { rel: "preconnect", href: "[https://fonts.gstatic.com](https://fonts.gstatic.com)", crossOrigin: "anonymous" },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "[https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap](https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap)",
+        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap",
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
@@ -101,20 +104,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         type: "application/ld+json",
         children: JSON.stringify({
-          "@context": "[https://schema.org](https://schema.org)",
+          "@context": "https://schema.org",
           "@type": "Organization",
           name: "NEW FACE",
-          url: "[https://new-face-course.lovable.app](https://new-face-course.lovable.app)",
+          url: "https://new-face-course.lovable.app",
           description: "Авторский метод самомассажа лица и работы с осанкой NEW FACE.",
         }),
       },
       {
         type: "application/ld+json",
         children: JSON.stringify({
-          "@context": "[https://schema.org](https://schema.org)",
+          "@context": "https://schema.org",
           "@type": "WebSite",
           name: "NEW FACE",
-          url: "[https://new-face-course.lovable.app](https://new-face-course.lovable.app)",
+          url: "https://new-face-course.lovable.app",
         }),
       },
     ],
@@ -129,11 +132,11 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
-        <HeadContent/>
+        <HeadContent />
       </head>
       <body>
         {children}
-        <Scripts/>
+        <Scripts />
       </body>
     </html>
   );
@@ -164,10 +167,10 @@ function RootComponent() {
   }, [router, queryClient]);
 
   return (
-    <QueryClientProvider client="{queryClient}">
-      <Outlet/>
-      {!hideOfferBar && <OfferBar/>}
-      <ConsentBanner/>
+    <QueryClientProvider client={queryClient}>
+      <Outlet />
+      {!hideOfferBar && <OfferBar />}
+      <ConsentBanner />
     </QueryClientProvider>
   );
 }
