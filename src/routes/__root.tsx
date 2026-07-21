@@ -14,8 +14,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { OfferBar } from "../components/sales/OfferBar";
-import { FortuneWheel } from "../components/sales/FortuneWheel";
-import { ConsentBanner } from "../components/ConsentBanner"; // <-- ДОБАВЛЕН ИМПОРТ
+import { ConsentBanner } from "../components/ConsentBanner";
 
 function NotFoundComponent() {
   return (
@@ -27,10 +26,7 @@ function NotFoundComponent() {
           The page you're looking for doesn't exist or has been moved.
         </p>
         <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
+          <Link className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90" to="/">
             Go home
           </Link>
         </div>
@@ -93,11 +89,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      { rel: "preconnect", href: "[https://fonts.googleapis.com](https://fonts.googleapis.com)" },
+      { rel: "preconnect", href: "[https://fonts.gstatic.com](https://fonts.gstatic.com)", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap",
+        href: "[https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap](https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap)",
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
@@ -105,20 +101,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         type: "application/ld+json",
         children: JSON.stringify({
-          "@context": "https://schema.org",
+          "@context": "[https://schema.org](https://schema.org)",
           "@type": "Organization",
           name: "NEW FACE",
-          url: "https://new-face-course.lovable.app",
+          url: "[https://new-face-course.lovable.app](https://new-face-course.lovable.app)",
           description: "Авторский метод самомассажа лица и работы с осанкой NEW FACE.",
         }),
       },
       {
         type: "application/ld+json",
         children: JSON.stringify({
-          "@context": "https://schema.org",
+          "@context": "[https://schema.org](https://schema.org)",
           "@type": "WebSite",
           name: "NEW FACE",
-          url: "https://new-face-course.lovable.app",
+          url: "[https://new-face-course.lovable.app](https://new-face-course.lovable.app)",
         }),
       },
     ],
@@ -133,11 +129,11 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
-        <HeadContent />
+        <HeadContent/>
       </head>
       <body>
         {children}
-        <Scripts />
+        <Scripts/>
       </body>
     </html>
   );
@@ -147,10 +143,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  // Hide OfferBar on primary landing + purchase pages (they have their own CTAs)
   const hideOfferBar = pathname === "/" || pathname === "/course" || pathname === "/intensive";
-  // Wheel of fortune should not compete with the on-page checkout on /course.
-  const showWheel = pathname !== "/course" && pathname !== "/thanks";
 
   useEffect(() => {
     let mounted = true;
@@ -161,7 +154,6 @@ function RootComponent() {
         router.invalidate();
         if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
       });
-      // store on window to allow cleanup
       (window as any).__auth_sub = sub;
     });
     return () => {
@@ -172,14 +164,10 @@ function RootComponent() {
   }, [router, queryClient]);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <Outlet />
-      {!hideOfferBar && <OfferBar />}
-      {showWheel && <FortuneWheel triggerDelayMs={15000} />}
-      
-      {/* ДОБАВЛЕН КОМПОНЕНТ АНТИФРОДА */}
-      <ConsentBanner />
-      
+    <QueryClientProvider client="{queryClient}">
+      <Outlet/>
+      {!hideOfferBar && <OfferBar/>}
+      <ConsentBanner/>
     </QueryClientProvider>
   );
 }

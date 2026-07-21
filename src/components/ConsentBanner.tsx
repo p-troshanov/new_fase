@@ -1,41 +1,75 @@
 // src/components/ConsentBanner.tsx
 import { useState, useEffect } from "react";
 import { Link } from "@tanstack/react-router";
-import { detectBot } from "@/client-bot-detector"; // Путь до твоего скрипта
+import { detectBot } from "@/client-bot-detector";
+
+declare global {
+  interface Window {
+    ym?: (...args: any[]) => void;
+  }
+}
 
 export function ConsentBanner() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    // Проверяем, соглашался ли юзер ранее
     const hasConsent = localStorage.getItem("privacy_consent");
     
     if (!hasConsent) {
       setShow(true);
     } else {
-      // Если согласие уже есть, тихо запускаем антифрод в фоне
-      runAntiFraud();
+      // Если согласие уже есть, тихо запускаем антифрод и затем метрику
+      runAntiFraudAndMetrika();
     }
   }, []);
 
-  const runAntiFraud = async () => {
+  const injectYandexMetrika = () => {
+    if (document.getElementById("yandex-metrika")) return;
+
+    // Внедряем основной скрипт
+    const script = document.createElement("script");
+    script.id = "yandex-metrika";
+    script.type = "text/javascript";
+    script.async = true;
+    script.innerHTML = `
+      (function(m,e,t,r,i,k,a){
+          m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+          m[i].l=1*new Date();
+          for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+          k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+      })(window, document,'script','[https://mc.yandex.ru/metrika/tag.js?id=110892673](https://mc.yandex.ru/metrika/tag.js?id=110892673)', 'ym');
+
+      ym(110892673, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+    `;
+    document.head.appendChild(script);
+
+    // Добавляем noscript fallback
+    const noscriptDiv = document.createElement("noscript");
+    noscriptDiv.id = "yandex-metrika-noscript";
+    noscriptDiv.innerHTML = `<div><img src="[https://mc.yandex.ru/watch/110892673](https://mc.yandex.ru/watch/110892673)" style="position:absolute; left:-9999px;" alt="" /></div>`;
+    document.body.appendChild(noscriptDiv);
+  };
+
+  const runAntiFraudAndMetrika = async () => {
     try {
-      // Запускаем сбор сигнатур (WebGL, Canvas, движения мыши)
+      // 1. Проверяем пользователя антифродом
       const botResult = await detectBot();
 
-      // Отправляем на твой Node.js бекенд
+      // 2. Отправляем результат
       await fetch("/api/track-pageview", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          // Отправляем результаты детектора, если нужно
           bot_score: botResult.score, 
           bot_level: botResult.level,
           signals: botResult.signals
         }),
       });
+
+      // 3. Запускаем Метрику только после прохождения антифрода
+      injectYandexMetrika();
     } catch (err) {
       console.error("Antifraud script failed:", err);
     }
@@ -44,8 +78,7 @@ export function ConsentBanner() {
   const handleAccept = () => {
     localStorage.setItem("privacy_consent", "true");
     setShow(false);
-    // Как только нажали "Принять" — сразу стартуем проверку
-    runAntiFraud();
+    runAntiFraudAndMetrika();
   };
 
   if (!show) return null;
@@ -56,7 +89,7 @@ export function ConsentBanner() {
         <p className="text-sm text-muted-foreground leading-relaxed">
           Мы используем файлы cookie и собираем технические данные устройства 
           для защиты от фрода и спама. Продолжая использовать сайт, вы соглашаетесь с{" "}
-          <Link to="/privacy" className="text-primary underline hover:text-foreground transition-colors">
+          <Link className="text-primary underline hover:text-foreground transition-colors" to="/privacy">
             Политикой конфиденциальности
           </Link>.
         </p>
